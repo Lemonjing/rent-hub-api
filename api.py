@@ -2,6 +2,7 @@
 # renthub restful api
 
 from flask import Flask, jsonify
+import sqlite3
 
 '''
 ==========  ===============================================  =============================
@@ -32,9 +33,64 @@ tasks = [
     }
 ]
 
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
 def get_tasks():
     return jsonify({'tasks': tasks})
+
+
+@app.route('/api/lists', methods=['GET'])
+def get_list():
+    topic_list = []
+    try:
+        conn = sqlite3.connect('database/result_20170521_204824.sqlite')
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, user, headimage, title, posttime FROM rent ORDER BY id ASC')
+        values = cursor.fetchall()
+        for row in values:
+            d = {'id': row[0],
+                 'user': row[1],
+                 'headimage': row[2],
+                 'title': row[3],
+                 'posttime': row[4]
+                 }
+            topic_list.append(d)
+    except Exception, e:
+        print 'database error', e
+        return
+    finally:
+        cursor.close()
+    return jsonify({'topic_list': topic_list})
+
+
+@app.route('/api/detail/<topic_id>', methods=['GET'])
+def get_detail(topic_id):
+    detail = {}
+    try:
+        conn = sqlite3.connect('database/result_20170521_204824.sqlite')
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM rent WHERE id=?', topic_id)
+        value = cursor.fetchone()
+        detail = {'id': value[0],
+             'user': value[1],
+             'headimage': value[2],
+             'title': value[3],
+             'content': value[4],
+             'posttime': value[6]
+             }
+
+    except Exception, e:
+        print 'database error', e
+        return
+    finally:
+        cursor.close()
+
+    return jsonify({'detail': detail})
 
 if __name__ == '__main__':
     app.run(debug=True)
