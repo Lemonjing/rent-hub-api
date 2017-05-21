@@ -68,7 +68,7 @@ def get_list():
     return jsonify({'topic_list': topic_list})
 
 
-@app.route('/api/detail/<topic_id>', methods=['GET'])
+@app.route('/api/detail/<topic_id>/', methods=['GET'])
 def get_detail(topic_id):
     detail = {}
     try:
