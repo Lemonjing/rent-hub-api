@@ -2,6 +2,7 @@
 # renthub restful api
 
 from flask import Flask, jsonify
+from flask import request
 import sqlite3
 
 '''
@@ -44,13 +45,16 @@ def get_tasks():
     return jsonify({'tasks': tasks})
 
 
-@app.route('/api/lists', methods=['GET'])
+@app.route('/api/lists/', methods=['GET'])
 def get_list():
+    offset = request.args.get('offset')
+    limit = request.args.get('limit')
     topic_list = []
     try:
         conn = sqlite3.connect('database/result_20170521_204824.sqlite')
         cursor = conn.cursor()
-        cursor.execute('SELECT id, user, headimage, title, posttime FROM rent ORDER BY id ASC')
+        cursor.execute('SELECT id, user, headimage, title, posttime FROM rent ORDER BY id ASC limit ?, ?',
+                       [offset, limit])
         values = cursor.fetchall()
         for row in values:
             d = {'id': row[0],
@@ -77,12 +81,12 @@ def get_detail(topic_id):
         cursor.execute('SELECT * FROM rent WHERE id=?', topic_id)
         value = cursor.fetchone()
         detail = {'id': value[0],
-             'user': value[1],
-             'headimage': value[2],
-             'title': value[3],
-             'content': value[4],
-             'posttime': value[6]
-             }
+                  'user': value[1],
+                  'headimage': value[2],
+                  'title': value[3],
+                  'content': value[4],
+                  'posttime': value[6]
+                  }
 
     except Exception, e:
         print 'database error', e
@@ -91,6 +95,7 @@ def get_detail(topic_id):
         cursor.close()
 
     return jsonify({'detail': detail})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
