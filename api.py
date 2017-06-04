@@ -4,6 +4,8 @@
 from flask import Flask, jsonify
 from flask import request
 import sqlite3
+import sys
+import time
 
 '''
 ==========  ===============================================  =============================
@@ -66,9 +68,9 @@ def get_list():
             topic_list.append(d)
     except Exception, e:
         print 'database error', e
-        return
     finally:
         cursor.close()
+
     return jsonify({'topic_list': topic_list})
 
 
