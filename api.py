@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
 # renthub restful api
 
-from flask import Flask, jsonify
+from flask import Flask
 from flask import request
+from flask import jsonify
+from flask import send_file
 import sqlite3
 import sys
 import time
@@ -39,7 +41,12 @@ tasks = [
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    return 'RentHub Restful API V1.0.'
+
+
+@app.route('/9437DC9F2456E68DFB3DE48A17FFACE0.txt/')
+def ssl_verify():
+    return send_file('9437DC9F2456E68DFB3DE48A17FFACE0.txt')
 
 
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
