@@ -71,6 +71,7 @@ def get_sys():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'info': info})
 
@@ -98,6 +99,7 @@ def rmd_list():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'rmd_list': rmd_list})
 
@@ -107,7 +109,7 @@ def search_all():
     offset = request.args.get('offset')
     limit = request.args.get('limit')
     sort_arg = request.args.get('sort')
-    keyword = request.args.get('keyword').strip()
+    keyword = request.args.get('keyword').replace(' ', '').encode('utf-8')
 
     topic_list = []
     total_count = 0
@@ -123,7 +125,7 @@ def search_all():
         conn = sqlite3.connect('../rent-hub-py/results/result_renthub.sqlite')
         cursor = conn.cursor()
         sql = "SELECT id, user, headimage, title, updatetime, coverimage FROM rent WHERE title LIKE '%" + keyword \
-              + "%' ORDER BY " + sort +" DESC LIMIT ?,?"
+              + "%' ORDER BY " + sort + " DESC LIMIT ?,?"
         print sql
         cursor.execute(sql, [offset, limit])
         values = cursor.fetchall()
@@ -146,6 +148,7 @@ def search_all():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'topic_list': topic_list, 'total_count': total_count})
 
@@ -156,7 +159,7 @@ def search():
     limit = request.args.get('limit')
     city = request.args.get('city')
     sort_arg = request.args.get('sort')
-    keyword = request.args.get('keyword')
+    keyword = request.args.get('keyword').replace(' ', '').encode('utf-8')
 
     topic_list = []
     total_count = 0
@@ -194,6 +197,7 @@ def search():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'topic_list': topic_list, 'total_count': total_count})
 
@@ -229,9 +233,9 @@ def list_all():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'topic_list': topic_list})
-
 
 
 @app.route('/api/lists/', methods=['GET'])
@@ -268,6 +272,7 @@ def list():
         print 'database error', e
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'topic_list': topic_list})
 
@@ -289,16 +294,89 @@ def detail(topic_id):
                   'posttime': value[6],
                   'updatetime': value[7],
                   'source': value[9],
-                  'note': value[10] if value[10] != None else 0
+                  'note': value[10] if value[10] is not None else 0
                   }
     except Exception, e:
         print 'database error', e
         return
     finally:
         cursor.close()
+        conn.close()
 
     return jsonify({'detail': detail})
 
 
+@app.route('/api/fav/<user_id>/', methods=['GET'])
+def get_fav(user_id):
+    topic_list = []
+    try:
+        conn = sqlite3.connect('../rent-hub-py/results/rent-hub-fav.sqlite')
+        cursor = conn.cursor()
+        fav_str = cursor.execute('SELECT fav_str FROM favorite WHERE user_id = ?', [user_id]).fetchone()
+        fav_list = fav_str[0].split(",")
+        print fav_list
+        conn_py = sqlite3.connect('../rent-hub-py/results/result_renthub.sqlite')
+        cursor_py = conn.cursor()
+        for info_id in fav_list:
+            cursor_py.execute("SELECT id, user, headimage, title, updatetime, coverimage FROM rent WHERE id= ?", [info_id])
+            row = cursor_py.fetchone()
+            d = {'id': row[0],
+                 'user': row[1],
+                 'headimage': row[2],
+                 'title': row[3],
+                 'updatetime': row[4],
+                 'coverimage': row[5]
+                 }
+            topic_list.append(d)
+        cursor_py.close()
+        conn_py.close()
+        cursor.close()
+        conn.close()
+        return jsonify({'favorite': topic_list})
+    except Exception, e:
+        print 'database error', e
+        return jsonify({'favorite': "error"})
+
+
+@app.route('/api/addfav/', methods=['GET'])
+def add_fav():
+    user_id = request.args.get('user_id')
+    info_id = request.args.get('info_id')
+    try:
+        conn = sqlite3.connect('../rent-hub-py/results/rent-hub-fav.sqlite')
+        cursor = conn.cursor()
+        value = cursor.execute('SELECT * FROM favorite WHERE user_id = ?', [user_id]).fetchone()
+
+        print "value=", value
+
+        if value is not None:
+            pre = value[1]
+            fav_str = pre.encode("utf-8") + "," + info_id.encode("utf-8")
+            cursor.execute('UPDATE favorite SET fav_str=? WHERE user_id=?', [fav_str, user_id])
+        else:
+            fav_str = info_id.encode("utf-8")
+            cursor.execute('INSERT INTO favorite(user_id, fav_str) VALUES (?, ?)', [user_id, fav_str])
+        cursor.close()
+        conn.commit()
+        conn.close()
+        return jsonify({'detail': fav_str})
+    except Exception, e:
+        print 'database error', e
+        return jsonify({'detail': "error"})
+
+
+@app.route('/api/dev1/', methods=['GET'])
+def dev1():
+    try:
+        conn = sqlite3.connect('../rent-hub-py/results/rent-hub-fav.sqlite')
+        cursor = conn.cursor()
+        cursor.execute('CREATE TABLE IF NOT EXISTS favorite(user_id TEXT PRIMARY KEY, fav_str TEXT)')
+        cursor.close()
+        conn.close()
+        return jsonify({'detail': "dev1 ok"})
+    except Exception, e:
+        print 'database error', e
+        return jsonify({'detail': "dev1 error"})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
