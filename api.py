@@ -83,8 +83,9 @@ def rmd_list():
     try:
         conn = sqlite3.connect('../rent-hub-py/results/result_renthub.sqlite')
         cursor = conn.cursor()
-        cursor.execute('SELECT id, user, headimage, title, updatetime, coverimage, note FROM rent WHERE coverimage IS NOT NULL ORDER BY note DESC, updatetime DESC LIMIT ?',
-                       [limit])
+        cursor.execute(
+            'SELECT id, user, headimage, title, updatetime, coverimage, note FROM rent WHERE coverimage IS NOT NULL ORDER BY note DESC, updatetime DESC LIMIT ?',
+            [limit])
         values = cursor.fetchall()
         for row in values:
             d = {'id': row[0],
@@ -217,7 +218,7 @@ def list_all():
     try:
         conn = sqlite3.connect('../rent-hub-py/results/result_renthub.sqlite')
         cursor = conn.cursor()
-        sql = 'SELECT id, user, headimage, title, updatetime, coverimage FROM rent ORDER BY ' + sort +' DESC LIMIT ?,?'
+        sql = 'SELECT id, user, headimage, title, updatetime, coverimage FROM rent ORDER BY ' + sort + ' DESC LIMIT ?,?'
         cursor.execute(sql, [offset, limit])
         values = cursor.fetchall()
         for row in values:
@@ -312,14 +313,30 @@ def get_fav(user_id):
     try:
         conn = sqlite3.connect('../rent-hub-py/results/rent-hub-fav.sqlite')
         cursor = conn.cursor()
-        fav_str = cursor.execute('SELECT fav_str FROM favorite WHERE user_id = ?', [user_id]).fetchone()
-        fav_list = fav_str[0].split(",")
-        print fav_list
+        fav_str = cursor.execute('SELECT fav_str FROM favorite WHERE user_id = ? LIMIT ?,?', [user_id]).fetchone()
+
+        if fav_str is not None:
+            fav_list = fav_str[0].split(",")
+            unique_fav_list = []
+            for info_id in fav_list:
+                if info_id not in unique_fav_list:
+                    unique_fav_list.append(info_id)
+            print "fav_list=", fav_list
+            print "unique_fav_list=", unique_fav_list
+        else:
+            return jsonify({'favorite': topic_list})
+        cursor.close()
+        conn.close()
+
         conn_py = sqlite3.connect('../rent-hub-py/results/result_renthub.sqlite')
-        cursor_py = conn.cursor()
-        for info_id in fav_list:
-            cursor_py.execute("SELECT id, user, headimage, title, updatetime, coverimage FROM rent WHERE id= ?", [info_id])
+        cursor_py = conn_py.cursor()
+
+        for info_id in unique_fav_list:
+            cursor_py.execute("SELECT id, user, headimage, title, updatetime, coverimage FROM rent WHERE id= ?",
+                              [info_id])
             row = cursor_py.fetchone()
+            if row is None:
+                continue
             d = {'id': row[0],
                  'user': row[1],
                  'headimage': row[2],
@@ -330,8 +347,6 @@ def get_fav(user_id):
             topic_list.append(d)
         cursor_py.close()
         conn_py.close()
-        cursor.close()
-        conn.close()
         return jsonify({'favorite': topic_list})
     except Exception, e:
         print 'database error', e
@@ -378,5 +393,6 @@ def dev1():
         print 'database error', e
         return jsonify({'detail': "dev1 error"})
 
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)
