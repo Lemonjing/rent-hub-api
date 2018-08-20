@@ -67,8 +67,8 @@ def get_sys():
             'total_count': value[2],
             'update_count': value[3]
         }
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -96,8 +96,8 @@ def rmd_list():
                  'coverimage': row[5]
                  }
             rmd_list.append(d)
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -127,7 +127,7 @@ def search_all():
         cursor = conn.cursor()
         sql = "SELECT id, user, headimage, title, updatetime, coverimage FROM rent WHERE title LIKE '%" + keyword \
               + "%' ORDER BY " + sort + " DESC LIMIT ?,?"
-        print sql
+        print('sql:', sql)
         cursor.execute(sql, [offset, limit])
         values = cursor.fetchall()
         cursor.close()
@@ -145,8 +145,8 @@ def search_all():
         cursor.execute(sql)
         values = cursor.fetchall()
         total_count = len(values)
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -194,8 +194,8 @@ def search():
         cursor.execute(sql, [city])
         values = cursor.fetchall()
         total_count = len(values)
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -230,8 +230,8 @@ def list_all():
                  'coverimage': row[5]
                  }
             topic_list.append(d)
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -269,8 +269,8 @@ def list():
                  'coverimage': row[5]
                  }
             topic_list.append(d)
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
     finally:
         cursor.close()
         conn.close()
@@ -297,8 +297,8 @@ def detail(topic_id):
                   'source': value[9],
                   'note': value[10] if value[10] is not None else 0
                   }
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
         return
     finally:
         cursor.close()
@@ -321,8 +321,8 @@ def get_fav(user_id):
             for info_id in fav_list:
                 if info_id not in unique_fav_list:
                     unique_fav_list.append(info_id)
-            print "fav_list=", fav_list
-            print "unique_fav_list=", unique_fav_list
+            print("fav_list=", fav_list)
+            print("unique_fav_list=", unique_fav_list)
         else:
             return jsonify({'favorite': topic_list})
         cursor.close()
@@ -348,8 +348,8 @@ def get_fav(user_id):
         cursor_py.close()
         conn_py.close()
         return jsonify({'favorite': topic_list})
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
         return jsonify({'favorite': "error"})
 
 
@@ -362,7 +362,7 @@ def add_fav():
         cursor = conn.cursor()
         value = cursor.execute('SELECT * FROM favorite WHERE user_id = ?', [user_id]).fetchone()
 
-        print "value=", value
+        print("value=", value)
 
         if value is not None:
             pre = value[1]
@@ -375,8 +375,8 @@ def add_fav():
         conn.commit()
         conn.close()
         return jsonify({'detail': fav_str})
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
         return jsonify({'detail': "error"})
 
 
@@ -389,8 +389,8 @@ def dev1():
         cursor.close()
         conn.close()
         return jsonify({'detail': "dev1 ok"})
-    except Exception, e:
-        print 'database error', e
+    except Exception as e:
+        print('database error', e)
         return jsonify({'detail': "dev1 error"})
 
 
